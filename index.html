@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3-color.v1.min.js"></script>
+  <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <script src="https://d3js.org/d3-format.v1.min.js"></script>
+
+  <style>
+    #mapcontainer {
+      position: absolute;
+      left: 0px;
+      top: 0px;
+    }
+
+    #textbox {
+      background-color: #eee;
+      word-wrap: break-word;
+      opacity: 0.6;
+      padding: 10px;
+      position: absolute;
+      text-align: right;
+      right: 0px;
+      top: 0px;
+      width: 25%;
+    }
+
+    @media screen and (max-width: 500px) {
+      #textbox {
+        height: 100px;
+        width: 100%;
+        text-align: left;
+      }
+
+      #map {
+        position: relative;
+        top: 100px;
+      }
+    }
+
+    body {
+      font-family: arial;
+      font-size: 12px;
+    }
+
+    a {
+      color: #000;
+    }
+
+    span.uncertainty {
+      color: #aaa;
+      font-size: 10px;
+    }
+
+    g.base-layer {
+      fill: #fff;
+      fill-opacity: 0;
+      stroke: #aaa;
+    }
+
+    g.map-layer {
+      opacity: 0.6;
+      stroke: #fff;
+      stroke-width: 0.3;
+    }
+
+    div.tooltip {
+      position: absolute;
+      text-align: left;
+      margins: 5px;
+      padding: 5px;
+      background: #fff;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="textbox">
+    <h3 style="font-size: 4vw;">Households making less than $20,000 per year with broadband subscriptions</h3>
+    <p>Data from U.S. Census Bureau <a href="https://www.census.gov/programs-surveys/acs/">American Community Survey</a> estimates between 2013 and 2017.</p>
+  </div>
+  <div id="map"></div>
+
+  <script>
+    var map = d3.select("#map"),
+        active = d3.select(null),
+        width = map.node().getBoundingClientRect().width - 20,
+        height = (width / 1.5) - 20;
+
+    var color = d3.scaleLinear()
+      .domain([40, 100])
+      .range(["white", "#003387"]);
+
+    var svg = map.append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    var baseLayer = svg.append("g")
+      .classed("base-layer", true);
+
+    var mapLayer = svg.append("g")
+      .classed("map-layer", true);
+
+    d3.json("tracts.geojson", function(error, geojson) {
+      if (error) throw error;
+
+      var projection = d3.geoMercator()
+        .fitExtent([[-width/4, -2 * height], [width, 2 * height]], geojson);
+
+      var path = d3.geoPath().projection(projection);
+
+      d3.json("shoreline.geojson", function(error, geojson) {
+        if (error) throw error;
+
+        baseLayer.selectAll("path")
+            .data(geojson.features)
+          .enter().append("path")
+            .attr("d", path);
+      })
+
+      var tooltip = d3.select("#map").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+      mapLayer.selectAll("path")
+          .data(geojson.features)
+        .enter().append("path")
+          .attr("d", path)
+          .style("fill", function(d) {
+            return color(d.properties.tier2);
+          })
+          .on("mouseover", function(d) {
+            tooltip.transition()
+              .duration(200)
+              .style("opacity", 0.9);
+            tooltip.html("<b>" + d.properties.NAMELSAD + "</b></br>"
+                          + "Households: " + d3.format(",")(d.properties.households) + " <span class='uncertainty'>(+/- " + d.properties.tier1moe + ")</span></br>"
+                          + "</br>"
+                          + "Percent with broadband, by income: " + "</br>"
+                          + "< $20,000: " + d.properties.tier1 + "% <span class='uncertainty'>(+/- " + d.properties.tier1moe + "%)</span></br>"
+                          + "$20,000 - $74,999: " + d.properties.tier2 + "% <span class='uncertainty'>(+/- " + d.properties.tier2moe + "%)</span></br>"
+                          + "> $75,000: " + d.properties.tier3 + "% <span class='uncertainty'>(+/- " + d.properties.tier3moe + "%)</span></br>")
+              .style("left", (d3.event.pageX) + "px")
+              .style("top", (d3.event.pageY - 28) + "px");
+          })
+          .on("mouseout", function(d) {
+            tooltip.transition()
+              .duration(200)
+              .style("opacity", 0)
+            tooltip.html();
+          });
+      });
+  </script>
+</body>
