@@ -21,19 +21,22 @@
       position: absolute;
       text-align: right;
       right: 0px;
-      top: 0px;
+      top: 200px;
       width: 25%;
     }
 
+    /* Optimized for 720x425 px and 375x425 px embeds*/
     @media screen and (max-width: 500px) {
       #textbox {
-        height: 100px;
+        background-color: #fff;
+        height: 300px;
         width: 100%;
-        text-align: left;
+        text-align: right;
       }
 
       #map {
         position: relative;
+        width: 500px;
         top: 100px;
       }
     }
@@ -77,8 +80,8 @@
 
 <body>
   <div id="textbox">
-    <h3 style="font-size: 3vw;">Households making $25,000-$75,000 per year with broadband subscriptions</h3>
-    <p>Data from U.S. Census Bureau <a href="https://www.census.gov/programs-surveys/acs/">American Community Survey</a> estimates between 2013 and 2017.</p>
+    <h3 style="font-size: 3vw;">Percent of households with broadband subscriptions</h3>
+    <p>Data from U.S. Census Bureau <a href="https://www.census.gov/programs-surveys/acs/">American Community Survey</a> estimates, compiled from surveys conducted between 2013 and 2017.</p>
   </div>
   <div id="map"></div>
 
@@ -86,7 +89,7 @@
     var map = d3.select("#map"),
         active = d3.select(null),
         width = map.node().getBoundingClientRect().width - 20,
-        height = (width / 1.5) - 20;
+        height = (width * 0.823) - 20;
 
     var color = d3.scaleLinear()
       .domain([40, 100])
@@ -106,7 +109,7 @@
       if (error) throw error;
 
       var projection = d3.geoMercator()
-        .fitExtent([[-width/4, -2 * height], [width, 2 * height]], geojson);
+        .fitExtent([[-1.2*width, -5*height/3], [width, height]], geojson);
 
       var path = d3.geoPath().projection(projection);
 
@@ -128,19 +131,22 @@
         .enter().append("path")
           .attr("d", path)
           .style("fill", function(d) {
-            return color(d.properties.tier2);
+            return color(d.properties.HC02_EST_VC18);
           })
           .on("mouseover", function(d) {
             tooltip.transition()
               .duration(200)
               .style("opacity", 0.9);
             tooltip.html("<b>" + d.properties.NAMELSAD + "</b></br>"
-                          + "Households: " + d3.format(",")(d.properties.households) + " <span class='uncertainty'>(+/- " + d.properties.tier1moe + ")</span></br>"
+                          + "Households: " + d3.format(",")(d.properties.HC01_EST_VC01) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC01 + ")</span></br>"
+                          + "Without a computer, smartphone or tablet: " + d3.format(",")(d.properties.HC01_EST_VC13) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC13 + ")</span></br>"
+                          + "With broadband: " + d3.format(",")(d.properties.HC01_EST_VC18) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC18 + ")</span></br>"
+                          + "With cellular data only: "+ d3.format(",")(d.properties.HC01_EST_VC20) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC20 + ")</span></br>"
                           + "</br>"
                           + "Percent with broadband, by income: " + "</br>"
-                          + "< $20,000: " + d.properties.tier1 + "% <span class='uncertainty'>(+/- " + d.properties.tier1moe + "%)</span></br>"
-                          + "$20,000 - $74,999: " + d.properties.tier2 + "% <span class='uncertainty'>(+/- " + d.properties.tier2moe + "%)</span></br>"
-                          + "> $75,000: " + d.properties.tier3 + "% <span class='uncertainty'>(+/- " + d.properties.tier3moe + "%)</span></br>")
+                          + "< $20,000: " + d.properties.HC02_EST_VC28 + "% <span class='uncertainty'>(+/- " + d.properties.HC02_MOE_VC28 + "%)</span></br>"
+                          + "$20,000 - $74,999: " + d.properties.HC02_EST_VC32 + "% <span class='uncertainty'>(+/- " + d.properties.HC02_MOE_VC32 + "%)</span></br>"
+                          + "> $75,000: " + d.properties.HC02_EST_VC36 + "% <span class='uncertainty'>(+/- " + d.properties.HC02_MOE_VC36 + "%)</span></br>")
               .style("left", (d3.event.pageX) + "px")
               .style("top", (d3.event.pageY - 28) + "px");
           })
