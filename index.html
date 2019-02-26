@@ -139,6 +139,7 @@
               .style("opacity", 0.9);
             tooltip.html("<b>" + d.properties.NAMELSAD + "</b></br>"
                           + "Households: " + d3.format(",")(d.properties.HC01_EST_VC01) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC01 + ")</span></br>"
+                          + "Making <$20,000 per year: " + d3.format(",")(d.properties.HC01_EST_VC26) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC26 + ")</span></br>"
                           + "Without a computer, smartphone or tablet: " + d3.format(",")(d.properties.HC01_EST_VC13) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC13 + ")</span></br>"
                           + "With broadband: " + d3.format(",")(d.properties.HC01_EST_VC18) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC18 + ")</span></br>"
                           + "With cellular data only: "+ d3.format(",")(d.properties.HC01_EST_VC20) + " <span class='uncertainty'>(+/- " + d.properties.HC01_MOE_VC20 + ")</span></br>"
